@@ -2,13 +2,13 @@ var express = require('express');
 var router = express.Router();
 var cors = require('cors');
 
-const MongoClient    = require('mongodb').MongoClient;
-const bodyParser     = require('body-parser');
-const db2             = require('../config/db');
+//const MongoClient    = require('mongodb').MongoClient;
+//const bodyParser     = require('body-parser');
+//const db2             = require('../config/db');
 
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
-mongoose.Promise = global.Promise;
+//mongoose.Promise = global.Promise;
 
 var UserSchema = new mongoose.Schema( {
     email: { type: String, required: true, match: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/ },
@@ -20,14 +20,16 @@ var UserSchema = new mongoose.Schema( {
 
 // подключение
 mongoose.connect("mongodb://localhost:27017/inCode");
+//const mongoClient = require("mongodb").MongoClient;
+ var User = mongoose.model("users", UserSchema);
 //var app = express();
 
 //let users = [{name: "Bob", age: 34} , {name: "Alice", age: 21}, {name: "Tom", age: 45}];
 // https://metanit.com/web/nodejs/6.1.php
-const mongoClient = require("mongodb").MongoClient;
 
-const url = db2.url;
- router.use(cors());
+
+//const url = db2.url;
+ //router.use(cors());
 var posts;
 
 // router.use(function (req, res, next) {
@@ -65,7 +67,8 @@ router.get('/', function(req, res, next) {
       res.send(results);
     }else if(status == "singup"){
       results = {
-        status: "verif"
+        status: "verif",
+        secret: 123
       };
       res.send(results);
     //return results;
@@ -73,43 +76,138 @@ router.get('/', function(req, res, next) {
   }
 //
 // Проверка почты
-  mongoClient.connect(url, function(err, client){
+  //mongoClient.connect(url, function(err, client){
 
-     const db = client.db("inCode");
-     const collection = db.collection("users");
+     //const db = client.db("inCode");
+     //const collection = db.collection("users");
 
-     if(err) return console.log(err);
+     //if(err) return console.log(err);
 
-     collection.find({email: req.query.email}).count(function(err, results){
+     if(req.query.status == "verif"){
 
-         //posts = results;
-         if(results > 0){
-           console.log("COUNT USERS: ", results);
+       User.find({email: req.query.email, verif: 0, secret: req.query.secret}).count(function(err, results){
+          //client.close();
+           //posts = results;
+           if(results > 0){
 
-           status_singup("cancel_email");
-         }else{
+            //var User = mongoose.model("users", UserSchema);
 
+             User.update({email: req.query.email}, {verif: 1}, function(err, result){
 
-           var User = mongoose.model("users", UserSchema);
-           var user = new User({email: req.query.email, pass: req.query.pass, secret: 123});
+	              mongoose.disconnect();
+	               if(err) return console.log(err);
 
-           user.save(function(err){
-            mongoose.disconnect();
+	                console.log(result);
 
-          if(err) return console.log(err);
-
-          console.log("Сохранен объект user", user);
-
-          status_singup("singup");
-          console.log("COUNT NOT: ",results);
-          });
+                  results = {
+                    status: "wellcome"
+                  };
+                  res.send(results);
+                });
 
 
-         }
-         //console.log("COUNT USERS: ",results);
-         client.close();
-     });
-  });
+
+           }else{
+
+
+             results = {
+               status: "error_secret",
+               secret: 123
+             };
+             res.send(results);
+
+
+           }
+           //console.log("COUNT USERS: ",results);
+
+       });
+     }else if(req.query.status == "login"){
+
+       User.find({email: req.query.email, pass: req.query.pass}).count(function(err, results){
+
+           //posts = results;
+           if(results > 0){
+
+             User.find({email: req.query.email, verif: 1}).count(function(err, results){
+                //client.close();
+                if(results > 0){
+
+                  var User = mongoose.model("users", UserSchema);
+                  User.find({email: req.query.email}, function(err, docs){
+                    mongoose.disconnect();
+
+                    if(err) return console.log(err);
+
+                    results = {
+                      status: "wellcome",
+                      id: docs[0].email
+                    }
+                    res.send(results);
+                  });
+
+
+                }else{
+
+                  results = {
+                    status: "verif",
+                    secret: 123
+                  };
+                  res.send(results);
+                }
+
+             });
+           }else{
+
+
+             results = {
+               status: "error_login"
+             };
+             res.send(results);
+
+
+           }
+           //console.log("COUNT USERS: ",results);
+           //client.close();
+       });
+     }else if(req.query.status == "signup"){
+
+
+       var user = new User({email: req.query.email, pass: req.query.pass, secret: 123});
+
+
+       User.find({email: req.query.email}).count(function(err, results){
+
+           //posts = results;
+           if(results > 0){
+             console.log("COUNT USERS: ", results);
+
+             status_singup("cancel_email");
+           }else{
+
+
+
+
+
+             user.save(function(err){
+              mongoose.disconnect();
+
+            if(err) return console.log(err);
+
+            console.log("Сохранен объект user", user);
+
+            status_singup("singup");
+            console.log("COUNT NOT: ",results);
+            });
+
+
+           }
+           //console.log("COUNT USERS: ",results);
+           //client.close();
+       });
+
+     }
+
+  //});
 //
       // Website you wish to allow to connect
       res.setHeader('Access-Control-Allow-Origin', '*');
