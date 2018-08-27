@@ -70,6 +70,7 @@ router.get('/', function(req, res, next) {
         status: "verif",
         secret: 123
       };
+        //mongoose.disconnect();
       res.send(results);
     //return results;
     }
@@ -94,7 +95,7 @@ router.get('/', function(req, res, next) {
 
              User.update({email: req.query.email}, {verif: 1}, function(err, result){
 
-	              mongoose.disconnect();
+
 	               if(err) return console.log(err);
 
 	                console.log(result);
@@ -102,6 +103,7 @@ router.get('/', function(req, res, next) {
                   results = {
                     status: "wellcome"
                   };
+                  //mongoose.disconnect();
                   res.send(results);
                 });
 
@@ -114,6 +116,7 @@ router.get('/', function(req, res, next) {
                status: "error_secret",
                secret: 123
              };
+             //mongoose.disconnect();
              res.send(results);
 
 
@@ -132,15 +135,15 @@ router.get('/', function(req, res, next) {
                 //client.close();
                 if(results > 0){
 
-                  var User = mongoose.model("users", UserSchema);
+                  //var User = mongoose.model("users", UserSchema);
                   User.find({email: req.query.email}, function(err, docs){
-                    mongoose.disconnect();
+                    //mongoose.disconnect();
 
                     if(err) return console.log(err);
 
                     results = {
                       status: "wellcome",
-                      id: docs[0].email
+                      id: docs[0]._id
                     }
                     res.send(results);
                   });
@@ -189,7 +192,7 @@ router.get('/', function(req, res, next) {
 
 
              user.save(function(err){
-              mongoose.disconnect();
+
 
             if(err) return console.log(err);
 
