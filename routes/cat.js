@@ -12,18 +12,15 @@ var Schema = mongoose.Schema;
 //mongoose.Promise = global.Promise;
 
 var UserSchema = new mongoose.Schema( {
-    email: { type: String, required: true, match: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/ },
-    pass: { type: String, required: true, match: /^[a-zA-Z0-9]+$/ },
-    secret: {type: String},
-    verif: { type: Number, default: 0 },
-    date: { type: Date, default: Date.now()},
-    token: { type: String, default: md5(Date.now().toString())}
+    title: { type: String, required: true},
+    position: { type: Number, required: true },
+    value: {type: Number, default: 0 }
 } );
 
 // подключение
 mongoose.connect("mongodb://localhost:27017/inCode");
 //const mongoClient = require("mongodb").MongoClient;
- var Cat = mongoose.model("cat", UserSchema);
+ var Cat = mongoose.model("cats", UserSchema);
 
 var posts;
 
@@ -56,52 +53,27 @@ router.get('/', function(req, res, next) {
 // Проверка почты
 
 
-     if(req.query.status == "verif"){
+     if(req.query.status == "add"){
 
-       User.find({email: req.query.email, verif: 0, secret: req.query.secret}).count(function(err, results){
-          //client.close();
-           //posts = results;
-           if(results > 0){
+
+        var cat = new Cat({title: 'testing', position: 0, value: 0});
 
             //var User = mongoose.model("users", UserSchema);
 
-             User.update({email: req.query.email}, {verif: 1}, function(err, result){
+            cat.save(function(err){
 
 
-	               if(err) return console.log(err);
+           if(err) return console.log(err);
 
-	                console.log(result);
+           console.log("Сохранен объект user", cat);
 
-                  User.find({email: req.query.email}, function(err, docs){
-
-                    results = {
-                      status: "wellcome",
-                      token: docs[0].token,
-                      email: docs[0].email
-                    };
-                    //mongoose.disconnect();
-                    res.send(results);
-                  });
-
-                });
+           //status_singup("singup");
+           console.log("COUNT NOT: ",results);
+           });
 
 
 
-           }else{
 
-
-             results = {
-               status: "error_secret",
-               secret: 123
-             };
-             //mongoose.disconnect();
-             res.send(results);
-
-
-           }
-           //console.log("COUNT USERS: ",results);
-
-       });
      }else if(req.query.status == "login"){
 
        User.find({email: req.query.email, pass: md5(req.query.pass)}).count(function(err, results){

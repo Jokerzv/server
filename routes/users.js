@@ -188,7 +188,7 @@ router.get('/', function(req, res, next) {
      }else if(req.query.status == "signup"){
 
 
-       var user = new User({email: req.query.email, pass: md5(req.query.pass), secret: 123, date: now()});
+       var user = new User({email: req.query.email, pass: md5(req.query.pass), secret: 123, date: now(), token: md5(now().toString())});
 
 
        User.find({email: req.query.email}).count(function(err, results){
