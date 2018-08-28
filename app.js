@@ -7,6 +7,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var userNotes = require('./routes/note_routes');
 var usersRouter = require('./routes/users');
+var userCat = require('./routes/cat');
 //var cors = require('cors');
 
 
@@ -16,6 +17,8 @@ var usersRouter = require('./routes/users');
 var app = express();
 var cors = require('cors'); // Yep, you need to install this
 app.use(cors()); //
+
+
 //app.use(cors());
 //let users = [{name: "Bob", age: 34} , {name: "Alice", age: 21}, {name: "Tom", age: 45}];
 // https://metanit.com/web/nodejs/6.1.php
@@ -64,7 +67,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/notes', userNotes);
-
+app.use('/cat', userCat);
 
 //require('./routes')(app, {});
 // catch 404 and forward to error handler
