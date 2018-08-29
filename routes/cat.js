@@ -83,7 +83,7 @@ function getscat(){
               res.send(user_data);
 
 
-               });
+            }).sort({ "position": 1 });
 
           }else{
             res.send([]);
@@ -98,6 +98,35 @@ function getscat(){
       console.log("Not find user: ",results);
     }
     });
+}
+
+ function update_cats_p(one_p, id_one, two_p, id_two, status){
+
+  if(status == "up"){
+
+    Cat.find({position: one_p}, function(err, results){
+      if(err) return console.log(err);
+      //console.log(results);
+      console.log("ID ONE ", results);
+      Cat.updateOne({_id: id_one}, {position: two_p}, function(err, docs){
+        if(err) return console.log(err);
+        console.log("res ", docs);
+        //console.log("Update position one!");
+          });
+
+  });
+
+  Cat.find({position: two_p}, function(err, results){
+      if(err) return console.log(err);
+
+      Cat.updateOne({_id: id_two}, {position: one_p}, function(err, docs){
+        if(err) return console.log(err);
+        //console.log("Update position two!");
+      });
+
+    });
+  }
+
 }
 
 function getscatup(){
@@ -121,7 +150,13 @@ function getscatup(){
                     two = user_data_cat[0].position - 1;
 
                 Cat.find({position: [one, two]}, function(err, cats_find){
-                      console.log("NASHEL ", cats_find);
+
+                  //  User.update({token: md5(now().toString())}, function(err, docs){
+                        //console.log("ID one  ", cats_find[0]._id, "id two ", cats_find[1]._id);
+                        update_cats_p(one, cats_find[0]._id, two, cats_find[1]._id, "up");
+                  //  });
+
+
                 });
 
               }
