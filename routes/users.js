@@ -148,17 +148,22 @@ router.get('/', function(req, res, next) {
                 if(results > 0){
 
                   //var User = mongoose.model("users", UserSchema);
-                  User.find({email: req.query.email}, function(err, docs){
+                   User.update({token: md5(now().toString())}, function(err, docs){
                     //mongoose.disconnect();
 
-                    if(err) return console.log(err);
+                      if(err) return console.log(err);
 
-                    results = {
-                      status: "wellcome",
-                      id: docs[0]._id,
-                      email: docs[0].email
-                    }
-                    res.send(results);
+                        User.find({email: req.query.email, verif: 1}, function(err, user_data){
+
+                            if(err) return console.log(err);
+
+                              results = {
+                                status: "wellcome",
+                                token: user_data[0].token,
+                                email: user_data[0].email
+                              }
+                        res.send(results);
+                      });
                   });
 
 
