@@ -24,7 +24,8 @@ var CatSchema = new mongoose.Schema( {
     title: { type: String, required: true},
     position: { type: Number, required: true },
     value: {type: Number, default: 0 },
-    user_id: {type: String, required: true}
+    user_id: {type: String, required: true},
+    p_cat: {type: String, default: 0}
 } );
 
 // подключение
@@ -70,10 +71,10 @@ function getscat(){
     if(results > 0){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
-         Cat.find({user_id: user_data[0]._id}).count(function(err, results){
+         Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
 
           if(results > 0){
-            Cat.find({user_id: user_data[0]._id}, function(err, user_data){
+            Cat.find({user_id: user_data[0]._id, p_cat: 0}, function(err, user_data){
               console.log("OK");
               if(err) return console.log(err);
               //console.log("Not find user: ",catres);
@@ -275,6 +276,7 @@ function getscatdown(){
 
 function getscatdelete(){
 
+
   User.find({token: req.query.token}).count(function(err, results){
 
     if(err) return console.log(err);
@@ -314,6 +316,48 @@ function getscatdelete(){
     }
     });
 }
+
+function getscatpod(){
+
+
+  User.find({token: req.query.token}).count(function(err, results){
+
+    if(err) return console.log(err);
+    if(results > 0){
+      User.find({token: req.query.token, verif: 1}, function(err, user_data){
+        if(err) return console.log(err);
+
+//db.users.find( { age: { $gte: 18, $lte: 30 } } );
+         Cat.find({user_id: user_data[0]._id, p_cat: {$ne: 0}}).count(function(err, results){
+
+          if(results > 0){
+            console.log(results);
+
+             Cat.find({user_id: user_data[0]._id, p_cat: {$ne: 0}}, function(err, pod_cat){
+                 console.log(pod_cat);
+               catres_data = [{
+                 status: "отвечаю cat!"
+               }]
+               res.send(pod_cat);
+
+             });
+
+
+          }else{
+            res.send([]);
+            console.log("Not cat user: ",results);
+          }
+
+            });
+       });
+
+    }else{
+      res.send({status: "not find user"});
+      console.log("Not find user: ",results);
+    }
+    });
+}
+
      if(req.query.status == "add"){
 
         User.find({token: req.query.token, verif: 1}).count(function(err, results){
@@ -357,6 +401,9 @@ function getscatdelete(){
      }else if(req.query.status == "getscatdelete"){
 
         getscatdelete();
+     }else if(req.query.status == "getscatpod"){
+
+        getscatpod();
      }else if(req.query.status == "signup"){
 
 
