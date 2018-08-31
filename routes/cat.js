@@ -8,6 +8,7 @@ const md5 = require('js-md5');
 //const db2             = require('../config/db');
 
 var mongoose = require("mongoose");
+var ObjectId = require('mongodb').ObjectID;
 var Schema = mongoose.Schema;
 //mongoose.Promise = global.Promise;
 
@@ -22,7 +23,7 @@ var UserSchema = new mongoose.Schema( {
 
 var CatSchema = new mongoose.Schema( {
     title: { type: String, required: true},
-    position: { type: Number, required: true },
+    position: { type: Number, required: false },
     value: {type: Number, default: 0 },
     user_id: {type: String, required: true},
     p_cat: {type: String, default: 0}
@@ -64,13 +65,137 @@ router.get('/', function(req, res, next) {
 //
 // Проверка почты
 
+
+function getscataddp(){
+  User.find({token: req.query.token}).count(function(err, results){
+
+    if(err) return console.log(err);
+    if(results > 0){
+      //console(ObjectID(results._id));
+      User.find({token: req.query.token, verif: 1}, function(err, user_data){
+        if(err) return console.log(err);
+
+         Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
+
+          if(results > 0){
+            Cat.find({user_id: user_data[0]._id, p_cat: 0, _id: req.query.catid}, function(err, cat_data){
+              console.log("OK");
+              if(err) return console.log(err);
+
+              var cat = new Cat({title: cat_data[0].title, p_cat: req.query.selectedcatid, value: cat_data[0].value, user_id: cat_data[0].user_id});
+
+                  cat.save(function(err){
+                    if(err) return console.log(err);
+                  });
+
+                  Cat.deleteOne({_id: req.query.catid}, function(err, user_data_cat){
+                    console.log("OK DELETE CAT", user_data_cat);
+                    if(err) return console.log(err);
+
+
+
+                      });
+
+                      Cat.find({user_id: cat_data[0].user_id, p_cat: 0}, function(err, cat_data_now){
+                        console.log("OK");
+                        if(err) return console.log(err);
+                        //console.log("Not find user: ",catres);
+                        catres_data = [{
+                          status: "отвечаю cat!"
+                        }]
+                        res.send(cat_data_now);
+
+
+                      }).sort({ "position": 1 });
+
+
+
+
+            }).sort({ "position": 1 });
+
+          }else{
+            res.send([]);
+            console.log("Not cat user: ",results);
+          }
+
+            });
+       });
+
+    }else{
+      res.send({status: "not find user"});
+      console.log("Not find user: ",results);
+    }
+    });
+}
+
+
+
+
+function getscatselectetnotp(){
+  User.find({token: req.query.token}).count(function(err, results){
+
+    if(err) return console.log(err);
+    if(results > 0){
+      //console(ObjectID(results._id));
+      User.find({token: req.query.token, verif: 1}, function(err, user_data){
+        if(err) return console.log(err);
+
+         Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
+           //, _id: {$ne: req.query.catid}
+          if(results > 0){
+            Cat.find({user_id: user_data[0]._id, p_cat: 0}, function(err, user_data){
+              console.log("OK");
+              if(err) return console.log(err);
+              //console.log("Not find user: ",catres);
+
+              var newMassive = [];
+              var data = [];
+              for (var i = 0; i < results; i++) {
+
+                data[i] = {
+                value: user_data[i]._id,
+                label: user_data[i].title
+              };
+                newMassive.push(data[i]);
+
+
+
+              }
+                cats_pod_not = [{
+                  value: user_data[0]._id,
+                  label: user_data[0].title
+            }]
+            console.log("NEW!!! Massive ", newMassive);
+             console.log("NEW!!! NOTEN ");
+              res.send(newMassive);
+
+
+            }).sort({ "position": 1 });
+
+          }else{
+            res.send([]);
+            console.log("Not cat user: ",results);
+          }
+
+            });
+       });
+
+    }else{
+      res.send({status: "not find user"});
+      console.log("Not find user: ",results);
+    }
+    });
+}
+
 function getscat(){
   User.find({token: req.query.token}).count(function(err, results){
 
     if(err) return console.log(err);
     if(results > 0){
+      //console(ObjectID(results._id));
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
+
          Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
 
           if(results > 0){
@@ -157,28 +282,42 @@ console.log("ID TWO ", results);
 
 }
 
-function getscatup(){
+
+
+function getcatup(){
+var count_cats_n = 0;
   User.find({token: req.query.token}).count(function(err, results){
 
     if(err) return console.log(err);
     if(results > 0){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
-         Cat.find({user_id: user_data[0]._id, _id: req.query.catid}).count(function(err, results){
 
+        Cat.find({user_id: user_data[0]._id}).count(function(err, count_cats_now){
+            if(err) return console.log(err);
+            count_cats_n = count_cats_now - 1;
+          console.log("COUNT CAT: ", count_cats_now);
+        });
+
+         Cat.find({user_id: user_data[0]._id, _id: req.query.catid}).count(function(err, results){
+           if(err) return console.log(err);
           if(results > 0){
 
             Cat.find({_id: req.query.catid}, function(err, user_data_cat){
-              console.log("OK");
+              console.log("OK find user");
               if(err) return console.log(err);
 
               console.log(user_data_cat[0].position);
               if(user_data_cat[0].position != 0){
+
+
+              //if(user_data_cat[0].position != count_cats_n){
                 var one = user_data_cat[0].position,
                     two = user_data_cat[0].position - 1;
 
                 Cat.find({position: [one, two]}, function(err, cats_find){
-
+                  if(err) return console.log(err);
+                  console.log("send func up_pos");
                   //  User.update({token: md5(now().toString())}, function(err, docs){
                         //console.log("ID one  ", cats_find[0]._id, "id two ", cats_find[1]._id);
                         update_cats_p(one, cats_find[0]._id, two, cats_find[1]._id, "up");
@@ -187,6 +326,7 @@ function getscatup(){
 
                 });
 
+              //}
               }
               //console.log("Not find user: ",catres);
               catres_data = [{
@@ -195,7 +335,10 @@ function getscatup(){
               res.send(catres_data);
 
 
-               });
+               })
+
+
+
 
           }else{
             res.send([]);
@@ -286,13 +429,35 @@ function getscatdelete(){
 
 
          Cat.find({user_id: user_data[0]._id, _id: req.query.catid}).count(function(err, results){
-
+           //var position_u;
           if(results > 0){
+            Cat.find({_id: req.query.catid}, function(err, user_data_cat2){
+              //position_u = user_data_cat2[0].position;
+              console.log("POS ", user_data_cat2[0].position);
 
             Cat.deleteOne({_id: req.query.catid}, function(err, user_data_cat){
               console.log("OK find user");
               if(err) return console.log(err);
 
+              Cat.find({position: {$gte: user_data_cat2[0].position}}, function(err, count_new_cats){
+                Cat.find({position: {$gte: user_data_cat2[0].position}}).count(function(err, count_users_c){
+                  var i = 0;
+                  var newcatmass = [];
+                  newcatmass = count_new_cats;
+                    for (var i = 0; i < count_users_c; i++) {
+
+                      Cat.updateOne({_id: newcatmass[i]._id}, {position: newcatmass[i].position - 1}, function(err, docs){
+                        if(err) return console.log(err);
+
+                        console.log("Update position ", newcatmass);
+                      });
+
+                    console.log(i);
+                    // ещё какие-то выражения
+                    }
+                  console.log(count_new_cats);
+                    });
+              });
               //console.log("Not find user: ",catres);
               catres_data = [{
                 status: "отвечаю cat!"
@@ -301,7 +466,7 @@ function getscatdelete(){
 
 
                });
-
+               });
           }else{
             res.send([]);
             console.log("Not cat user: ",results);
@@ -319,7 +484,6 @@ function getscatdelete(){
 
 function getscatpod(){
 
-
   User.find({token: req.query.token}).count(function(err, results){
 
     if(err) return console.log(err);
@@ -327,13 +491,12 @@ function getscatpod(){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
 
-//db.users.find( { age: { $gte: 18, $lte: 30 } } );
          Cat.find({user_id: user_data[0]._id, p_cat: {$ne: 0}}).count(function(err, results){
 
           if(results > 0){
             console.log(results);
 
-             Cat.find({user_id: user_data[0]._id, p_cat: {$ne: 0}}, function(err, pod_cat){
+             Cat.find({user_id: user_data[0]._id, p_cat: req.query.catidselected}, function(err, pod_cat){
                  console.log(pod_cat);
                catres_data = [{
                  status: "отвечаю cat!"
@@ -341,8 +504,8 @@ function getscatpod(){
                res.send(pod_cat);
 
              });
-
-
+             console.log("NOT FIND");
+             //res.send([{st: "not"}]);
           }else{
             res.send([]);
             console.log("Not cat user: ",results);
@@ -394,7 +557,7 @@ function getscatpod(){
         getscat();
      }else if(req.query.status == "getcatup"){
 
-        getscatup();
+        getcatup();
      }else if(req.query.status == "getscatdown"){
 
         getscatdown();
@@ -404,6 +567,12 @@ function getscatpod(){
      }else if(req.query.status == "getscatpod"){
 
         getscatpod();
+     }else if(req.query.status == "getscatselectetnotp"){
+
+        getscatselectetnotp();
+     }else if(req.query.status == "getscataddp"){
+
+        getscataddp();
      }else if(req.query.status == "signup"){
 
 
