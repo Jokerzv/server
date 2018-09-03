@@ -146,9 +146,9 @@ router.get('/', function(req, res, next) {
              User.find({email: req.query.email, verif: 1}).count(function(err, results){
                 //client.close();
                 if(results > 0){
-
+                  var newtoken = md5(now().toString());
                   //var User = mongoose.model("users", UserSchema);
-                   User.update({token: md5(now().toString())}, function(err, docs){
+                   User.update({token: newtoken}, function(err, docs){
                     //mongoose.disconnect();
 
                       if(err) return console.log(err);
@@ -159,7 +159,7 @@ router.get('/', function(req, res, next) {
 
                               results = {
                                 status: "wellcome",
-                                token: user_data[0].token,
+                                token: newtoken,
                                 email: user_data[0].email
                               }
                         res.send(results);
