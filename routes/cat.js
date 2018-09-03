@@ -46,6 +46,7 @@ var ExSchema = new mongoose.Schema( {
     user_id: {type: String, required: true},
     date: {type: Date, default: now()},
     date_t: {type: String, default: today.toLocaleDateString("en-US", options)},
+    p_cat: {type: String, default: 0}
 } );
 
 // подключение
@@ -91,19 +92,33 @@ function addexpense(){
     if(results > 0){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
 
+        Cat.find({_id: req.query.namecat, user_id: user_data[0]._id}, function(err, cat_data){
+
+          var addex = new Ex({desc: req.query.desc, namecat: cat_data[0].title, value: toFixed(req.query.value, 2), user_id: user_data[0]._id, p_cat: cat_data[0].p_cat});
+
+              addex.save(function(err){
 
 
+               if(err) return console.log(err);
 
-                var addex = new Ex({desc: req.query.desc, namecat: req.query.namecat, value: toFixed(req.query.value, 2), user_id: user_data[0]._id});
+               console.log("Сохранен объект EX");
+               Cat.find({_id: cat_data[0]._id}, function(err, cat_data2){
 
-                    addex.save(function(err){
-
-
-                     if(err) return console.log(err);
-
-                     console.log("Сохранен объект EX");
-                     getscat();
+                 Cat.updateOne({_id: cat_data[0]._id}, {value: cat_data[0].value + toFixed(req.query.value, 2)}, function(err, docs){
+                   if(err) return console.log(err);
+                   console.log("Update ONE  ", docs);
+                   //console.log("Update position one!");
+                     });
                    });
+
+
+               getscat();
+             });
+
+        });
+
+
+
 
 
 
@@ -201,6 +216,44 @@ function getscataddp(){
     });
 }
 
+function getexpenses_pod(){
+  User.find({token: req.query.token}).count(function(err, results){
+
+    if(err) return console.log(err);
+    if(results > 0){
+      //console(ObjectID(results._id));
+      User.find({token: req.query.token, verif: 1}, function(err, user_data){
+        if(err) return console.log(err);
+
+         Ex.find({user_id: user_data[0]._id, _id: req.query.ex_id}).count(function(err, results){
+
+          if(results > 0){
+            Ex.find({user_id: user_data[0]._id, _id: req.query.ex_id}, function(err, user_data){
+              console.log("OK");
+              if(err) return console.log(err);
+              //console.log("Not find user: ",catres);
+              catres_data = [{
+                status: "отвечаю cat!"
+              }]
+              res.send(user_data);
+
+
+            }).limit(20).sort({ "position": 1 });
+
+          }else{
+            res.send([]);
+            console.log("Not cat user: ",results);
+          }
+
+            });
+       });
+
+    }else{
+      res.send([]);
+      console.log("Not find user: ",results);
+    }
+    });
+}
 
 function getexpenses(){
   User.find({token: req.query.token}).count(function(err, results){
@@ -250,10 +303,10 @@ function getexpensesselect_cats(){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
 
-         Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
+         Cat.find({user_id: user_data[0]._id}).count(function(err, results){
            //, _id: {$ne: req.query.catid}
           if(results > 0){
-            Cat.find({user_id: user_data[0]._id, p_cat: 0}, function(err, user_data){
+            Cat.find({user_id: user_data[0]._id}, function(err, user_data){
               console.log("OK");
               if(err) return console.log(err);
               //console.log("Not find user: ",catres);
@@ -348,6 +401,45 @@ function getscatselectetnotp(){
 
     }else{
       res.send({status: "not find user"});
+      console.log("Not find user: ",results);
+    }
+    });
+}
+
+function getscatall(){
+  User.find({token: req.query.token}).count(function(err, results){
+
+    if(err) return console.log(err);
+    if(results > 0){
+      //console(ObjectID(results._id));
+      User.find({token: req.query.token, verif: 1}, function(err, user_data){
+        if(err) return console.log(err);
+
+         Cat.find({user_id: user_data[0]._id}).count(function(err, results){
+
+          if(results > 0){
+            Cat.find({user_id: user_data[0]._id}, function(err, user_data){
+              console.log("OK");
+              if(err) return console.log(err);
+              //console.log("Not find user: ",catres);
+              catres_data = [{
+                status: "отвечаю cat!"
+              }]
+              res.send(user_data);
+
+
+            }).sort({ "_id": 1 });
+
+          }else{
+            res.send([]);
+            console.log("Not cat user: ",results);
+          }
+
+            });
+       });
+
+    }else{
+      res.send([]);
       console.log("Not find user: ",results);
     }
     });
@@ -821,6 +913,12 @@ function getscatpod(){
      }else if(req.query.status == "getexpenses"){
 
         getexpenses();
+     }else if(req.query.status == "getexpenses_pod"){
+
+        getexpenses_pod();
+     }else if(req.query.status == "getscatall"){
+
+        getscatall();
      }else if(req.query.status == "signup"){
 
 
