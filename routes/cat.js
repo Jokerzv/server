@@ -97,7 +97,7 @@ function addexpense(){
 
         Cat.find({_id: req.query.namecat, user_id: user_data[0]._id}, function(err, cat_data){
 
-          var addex = new Ex({desc: req.query.desc, namecat: cat_data[0].title, value: toFixed(req.query.value, 2), user_id: user_data[0]._id, p_cat: cat_data[0].p_cat});
+          var addex = new Ex({desc: req.query.desc, namecat: cat_data[0].title, value: pf(req.query.value), user_id: user_data[0]._id, p_cat: cat_data[0].p_cat});
 
               addex.save(function(err){
 
@@ -107,7 +107,7 @@ function addexpense(){
                console.log("Сохранен объект EX");
                Cat.find({_id: cat_data[0]._id}, function(err, cat_data2){
 
-                
+
                  //console.log("AAAAAAAA ------ ", pf(cat_data[0].value) + pf(req.query.value));
                  Cat.updateOne({_id: cat_data[0]._id}, {value: pf(cat_data[0].value) + pf(req.query.value)}, function(err, docs){
                    if(err) return console.log(err);
