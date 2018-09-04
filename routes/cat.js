@@ -13,6 +13,8 @@ require('mongoose-double')(mongoose);
 var SchemaTypes = mongoose.Schema.Types;
 var Schema = mongoose.Schema;
 var toFixed = require('tofixed');
+var parseInt = require('parse-int');
+var pf = require('parse-float');
 //mongoose.Promise = global.Promise;
 
 function now() {
@@ -36,7 +38,8 @@ var CatSchema = new mongoose.Schema( {
     position: { type: Number, required: false },
     value: {type: Number, default: 0 },
     user_id: {type: String, required: true},
-    p_cat: {type: String, default: 0}
+    p_cat: {type: String, default: 0},
+    p_cat_is: {type: Number, default: 0}
 } );
 
 var ExSchema = new mongoose.Schema( {
@@ -104,7 +107,9 @@ function addexpense(){
                console.log("Сохранен объект EX");
                Cat.find({_id: cat_data[0]._id}, function(err, cat_data2){
 
-                 Cat.updateOne({_id: cat_data[0]._id}, {value: cat_data[0].value + toFixed(req.query.value, 2)}, function(err, docs){
+                
+                 //console.log("AAAAAAAA ------ ", pf(cat_data[0].value) + pf(req.query.value));
+                 Cat.updateOne({_id: cat_data[0]._id}, {value: pf(cat_data[0].value) + pf(req.query.value)}, function(err, docs){
                    if(err) return console.log(err);
                    console.log("Update ONE  ", docs);
                    //console.log("Update position one!");
@@ -149,7 +154,13 @@ function getscataddp(){
               console.log("OK");
               if(err) return console.log(err);
 
-              var cat = new Cat({title: cat_data[0].title, p_cat: req.query.selectedcatid, value: cat_data[0].value, user_id: cat_data[0].user_id});
+              Cat.updateOne({_id: req.query.selectedcatid}, {p_cat_is: 1}, function(err, docs){
+                if(err) return console.log(err);
+                console.log("Update ONE  ", docs);
+                //console.log("Update position one!");
+                  });
+
+                  var cat = new Cat({title: cat_data[0].title, p_cat: req.query.selectedcatid, value: cat_data[0].value, user_id: cat_data[0].user_id, p_cat_is: 2});
 
                   cat.save(function(err){
                     if(err) return console.log(err);
@@ -225,10 +236,10 @@ function getexpenses_pod(){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
 
-         Ex.find({user_id: user_data[0]._id, _id: req.query.ex_id}).count(function(err, results){
+         Cat.find({user_id: user_data[0]._id, p_cat: req.query.ex_id}).count(function(err, results){
 
           if(results > 0){
-            Ex.find({user_id: user_data[0]._id, _id: req.query.ex_id}, function(err, user_data){
+            Cat.find({user_id: user_data[0]._id, p_cat: req.query.ex_id}, function(err, user_data){
               console.log("OK");
               if(err) return console.log(err);
               //console.log("Not find user: ",catres);
@@ -241,7 +252,7 @@ function getexpenses_pod(){
             }).limit(20).sort({ "position": 1 });
 
           }else{
-            res.send([]);
+            res.send([{not: 0}]);
             console.log("Not cat user: ",results);
           }
 
@@ -415,10 +426,10 @@ function getscatall(){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
 
-         Cat.find({user_id: user_data[0]._id}).count(function(err, results){
+         Cat.find({user_id: user_data[0]._id, p_cat_is: {$ne: 2}}).count(function(err, results){
 
           if(results > 0){
-            Cat.find({user_id: user_data[0]._id}, function(err, user_data){
+            Cat.find({user_id: user_data[0]._id, p_cat_is: {$ne: 2}}, function(err, user_data){
               console.log("OK");
               if(err) return console.log(err);
               //console.log("Not find user: ",catres);
@@ -693,6 +704,12 @@ function getscatdeletePod(){
             Cat.find({_id: req.query.catid}, function(err, user_data_cat2){
               //position_u = user_data_cat2[0].position;
               console.log("POS ", user_data_cat2[0].position);
+
+              Cat.updateOne({_id: user_data_cat2[0].p_cat}, {p_cat_is: 0}, function(err, docs){
+                if(err) return console.log(err);
+                console.log("Update ONE  ", docs);
+                //console.log("Update position one!");
+                  });
 
             Cat.deleteOne({_id: req.query.catid}, function(err, user_data_cat){
               console.log("OK find user");
