@@ -109,7 +109,7 @@ function addexpense(){
 
 
                  //console.log("AAAAAAAA ------ ", pf(cat_data[0].value) + pf(req.query.value));
-                 Cat.updateOne({_id: cat_data[0]._id}, {value: pf(cat_data[0].value) + pf(req.query.value)}, function(err, docs){
+                 Cat.updateOne({_id: cat_data[0]._id}, {value: cat_data[0].value + pf(req.query.value)}, function(err, docs){
                    if(err) return console.log(err);
                    console.log("Update ONE  ", docs);
                    //console.log("Update position one!");
