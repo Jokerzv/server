@@ -370,10 +370,10 @@ function getscatselectetnotp(){
       User.find({token: req.query.token, verif: 1}, function(err, user_data){
         if(err) return console.log(err);
 
-         Cat.find({user_id: user_data[0]._id}).count(function(err, results){
+         Cat.find({user_id: user_data[0]._id, p_cat: 0}).count(function(err, results){
            //, _id: {$ne: req.query.catid}
           if(results > 0){
-            Cat.find({user_id: user_data[0]._id}, function(err, user_data){
+            Cat.find({user_id: user_data[0]._id, p_cat: 0}, function(err, user_data){
               console.log("OK");
               if(err) return console.log(err);
               //console.log("Not find user: ",catres);
@@ -842,7 +842,7 @@ function getscatpod(){
             console.log(results);
 
              Cat.find({user_id: user_data[0]._id, p_cat: req.query.catidselected}, function(err, pod_cat){
-                 console.log(pod_cat);
+                 console.log("POD ",pod_cat);
                catres_data = [{
                  status: "отвечаю cat!"
                }]
